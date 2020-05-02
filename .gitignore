@@ -1,0 +1,27 @@
+.DS_Store
+Thumbs.db
+Desktop.ini
+venv/
+session/
+__pycache__/
+node_modules/
+bak/
+bower_components/
+.svn/
+.sass-cache/
+.nodejs-cache/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea
+.vscode
+.project
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

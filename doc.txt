@@ -1,0 +1,10 @@
+用户配置  login.json
+  用户名name
+  密码pwd
+  可以自行添加修改删除
+  
+数据表  模板在data-example.json
+
+数据真正存放在  data.json
+  表头在columns
+  表数据在data

@@ -1,0 +1,76 @@
+{
+  "columns": [
+      {
+          "title": "登记日期",
+          "key": "reg_date"
+      },
+      {
+          "title": "模号",
+          "key": "module_no"
+      },
+      {
+          "title": "钳工",
+          "key": "username"
+      },
+      {
+          "title": "零件名称",
+          "key": "module_name"
+      },
+      {
+          "title": "数量",
+          "key": "module_num"
+      },
+      {
+          "title": "加工内容",
+          "key": "info"
+      },
+      {
+          "title": "申请日期",
+          "key": "apply_date"
+      },
+      {
+          "title": "预计到料日期",
+          "key": "stuff_date"
+      },
+      {
+          "title": "要求完成日期",
+          "key": "expected_date"
+      },
+      {
+          "title": "数据下发日期",
+          "key": "distributed_date"
+      },
+      {
+          "title": "工艺要求",
+          "key": "tech_require"
+      }
+  ],
+  "data": [
+      {
+          "reg_date": "4月18日",
+          "module_no": "20BH145",
+          "username": "New",
+          "module_name": "芯",
+          "module_num": 1,
+          "info": "调质",
+          "apply_date": "4月18日",
+          "stuff_date": "4月24日",
+          "expected_date": "4月27日",
+          "distributed_date": "",
+          "tech_require": ""
+      },
+      {
+          "reg_date": "4月30日",
+          "module_no": "20BH145",
+          "module_name": "",
+          "username": "",
+          "module_num": "",
+          "info": "",
+          "apply_date": "4月30日",
+          "stuff_date": "4月30日",
+          "expected_date": "4月30日",
+          "distributed_date": "",
+          "tech_require": ""
+      }
+  ]
+}

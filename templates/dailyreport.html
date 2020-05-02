@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每天问题汇总</title>
+  <script src="/static/js/jquery-2.2.4.min.js"></script>
+  <script src="/static/js/vue.dev.js"></script>
+  <link rel="stylesheet" href="/static/js/iview.css">
+  <script src="/static/js/iview.min.js"></script>
+  <script src="/static/js/underscore-min.js"></script>
+  <script src="/static/js/moment.min.js"></script>
+  <script src="/static/js/utils.js"></script>
+  <style>
+    .ivu-table-wrapper{
+      overflow: initial;
+    }
+    .ivu-poptip-body .ivu-icon-ios-help-circle{
+      display: none;
+    }
+    .demo-spin-icon-load{
+      animation: ani-demo-spin 1s linear infinite;
+    }
+    .layout-header{
+      padding: 20px 50px;
+    }
+    .layout-content{
+      padding-bottom: 40px!important;
+      position: fixed;
+      top: 73px;
+      bottom: 0;
+      overflow: auto;
+    }
+    .username{
+      font-size: 22px;
+
+    }
+    .layout-footer{
+      height: 40px;
+      padding: 10px 20px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #f5f7f9;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <Template>
+    <div class="layout">
+      <Layout>
+        <Header class="layout-header" :style="{padding: '20px 50px'}">
+          <Row type="flex" justify="space-between" align="middle">
+            <i-col>
+              <i-button @click="toPage('/')">
+                <span>外发加工<i><Icon type="ios-arrow-forward" /></i></span>
+              </i-button>
+            </i-col>
+            <i-col style="text-align: right; display: flex; align-items: center;">
+              <label class="username" for="" v-if="username"><i><Icon type="ios-person" size=24  /></i>{{username}}</label>
+              <i-button @click="logout">
+                <span v-if="!logouting">注销登录<i><Icon type="md-swap" /></i></span>
+                <span v-else>
+                  <i><Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon></i>注销中...
+                </span>
+              </i-button>
+            </i-col>
+          </Row>
+        </Header>
+        <Content class="layout-content" :style="{padding: '0 50px'}">
+          <Card :bordered="false">
+            <p slot="title">每日问题汇总</p>
+
+            <Row type="flex" justify="space-between" align="middle" style="margin-bottom: 16px;">
+              <i-col :sm="{span: 12}" order="1">
+                <i-button @click="openModal" style="margin-right: 16px;">
+                  <i><Icon type="md-add" /></i>
+                  添加数据
+                </i-button>
+                <i-button @click="outExcel"><i><Icon type="md-code-download" size=18 /></i>导出excel</i-button>
+              </i-col>
+            </Row>
+            <i-table border stripe :columns="columns1" :data="data1" highlight-row :span-method="handleSpan">
+              <template slot-scope="{ row }" slot="report_date">
+                <span>{{formatDate(row.report_date)}}</span>
+              </template>
+              <template slot-scope="{ row, index }" slot="action">
+                <i-button type="primary" size="small" style="margin-right: 5px" @click="edit(index)">edit</i-button>
+                <Poptip
+                  confirm
+                  placement="bottom"
+                  title="确认删除？"
+                  @on-ok="remove(index)">
+                  <i-button type="error" size="small"><Icon type="md-close" /></i-button>
+                </Poptip>
+              </template>
+            </i-table>
+          </Card>
+          <Drawer
+            :title="isEdit ? '修改数据' : '添加数据'"
+            v-model="showDrawer"
+            width="420"
+            :mask-closable="false"
+            :styles="styles"
+            :mask="false"
+          >
+            <Row type="flex"  justify="end" align="middle" style="margin-bottom: 30px;">
+              <i-col span="8" style="text-align: right;">
+                <i-button type="primary" @click="ok" v-if="!isEdit">
+                  <span v-if="!adding">确定添加</span>
+                  <span v-else>
+                    <i><Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon></i>添加中...
+                  </span>
+                </i-button>
+                <i-button type="primary" @click="editConfirm" v-else>
+                  <span v-if="!adding">确定修改</span>
+                  <span v-else>
+                    <i><Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon></i>修改中...
+                  </span>
+                </i-button>
+              </i-col>
+            </Row>
+            <Row type="flex" justify="space-between" align="middle">
+              <i-form ref="formInline" :model="formItem" :rules="ruleValidate" :label-width="120">
+                <i-col span="24">
+                  <form-item label="部门" prop="apartment">
+                    <!-- <i-input type="text" v-model.trim="formItem.apartment" placeholder="部门">
+                    </i-input> -->
+                    <i-select v-model="formItem.apartment" filterable allow-create @on-create="createApartment">
+                        <i-option v-for="item in apartmentList" :value="item.value" :key="item.value">{{ item.label }}</i-option>
+                    </i-select>
+                  </form-item>
+                </i-col>
+                <i-col span="24">
+                  <form-item label="问题点" prop="problem">
+                    <i-input type="text" v-model.trim="formItem.problem" placeholder="问题点">
+                    </i-input>
+                  </form-item>
+                </i-col>
+                <i-col span="24">
+                  <form-item label="问题点描述" prop="desc">
+                    <i-input type="text" v-model.trim="formItem.desc" placeholder="问题点描述">
+                    </i-input>
+                  </form-item>
+                </i-col>
+                <i-col span="24">
+                  <form-item label="对应人员" prop="reporter">
+                    <i-input type="text" v-model.trim="formItem.reporter" placeholder="对应人员">
+                    </i-input>
+                  </form-item>
+                </i-col>
+                <i-col span="24">
+                  <form-item label="日期" prop="report_date">
+                    <date-picker type="date" v-model.trim="formItem.report_date" placeholder="日期"></date-picker>
+                  </form-item>
+                </i-col>
+              </i-form>
+            </Row>
+          </Drawer>    
+        </Content>
+        <!-- <Footer class="layout-footer">
+        </Footer> -->
+      </Layout>
+    </div>
+  </Template>
+</div>
+<script>
+  jQuery(function(){
+    var app = new Vue({
+      el: '#app',
+      data: {
+        message: 'Hello Vue!',
+        username: sessionStorage.getItem('user.name'),
+        showDrawer: false, // drawer,
+        isEdit: false,
+        styles: {
+          height: 'calc(100% - 55px)',
+          overflow: 'auto',
+          paddingBottom: '53px',
+          position: 'static'
+        },
+        adding: false, // 添加状态
+        logouting: false, // 注销状态
+        columns1: [],
+        data1: [],
+        apartmentList: [
+          {
+            value: '工艺计划',
+            label: '工艺计划'
+          },
+          {
+            value: '加工',
+            label: '加工'
+          },
+          {
+            value: '钳工',
+            label: '钳工'
+          },
+          {
+            value: '外协',
+            label: '外协'
+          },
+          {
+            value: '益模',
+            label: '益模'
+          }
+        ],
+        formItem: {
+          apartment: '',
+          problem: '',
+          desc: '',
+          reporter: '',
+          report_date: new Date(),
+        },
+        ruleValidate: {
+          apartment: [
+            { required: true, message: '请填写部门', trigger: 'blur' }
+          ],
+          problem: [
+              { required: true, message: '请填写问题点', trigger: 'blur' }
+          ],
+          desc: [
+              { required: true, message: '请填写问题点描述', trigger: 'blur' }
+          ],
+          reporter: [
+              { required: true, message: '请填写对应人员', trigger: 'blur' }
+          ],
+          report_date: [
+              { required: true, type: 'date', message: '请填写日期', trigger: 'blur' }
+          ],
+        }
+    
+      },
+      mounted: function(){
+        this.getData()
+      },
+      methods: {
+        toPage: function(path) {
+          location.href = path
+        },
+        openModal: function() {
+          var that = this
+          that.srefs['formInline'].resetFields();
+          that.showDrawer = true
+        },
+        formatDate: function(d, format = 'a'){
+          if(!d)return ''
+          if(!(d instanceof Date))d = new Date(d)
+          var val = ''
+          // debugger
+          switch(format){
+            case 'a':
+              val = (d.getMonth()+1) + '月' + d.getDate() + '日'
+              break
+            case 'b':
+              val = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日'
+              break
+            case 'c':
+              val = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate()
+              break
+          }
+          return val
+        },
+        reset: function() {
+          var that = this
+          that.srefs['formInline'].resetFields();
+        },
+        edit (index) {
+          var that = this
+          that.isEdit = true
+          console.log(that.data1)
+          that.formItem = deepCopy(that.data1[index])
+          that.showDrawer = true
+        },
+        remove (index) {
+          var that = this
+          // this.data1.splice(index, 1);
+          this.ivMessage.loading({
+              content: 'remove ing...',
+              duration: 0
+          });
+
+          jQuery.ajax({
+            type:'post',
+            url: '/daily/reort/table/del',
+            data: JSON.stringify({id: that.data1[index].id}),
+            dataType:'json',
+            contentType : "application/json",
+            cache:false,
+            async:false,
+            success: function(res) {
+              that.ivMessage.destroy()
+              if(res && res.status == 1){
+                that.ivMessage.success({
+                  content: 'remove successful',
+                  onClose: function(){
+                    // that.dataHandle(res.data.data)
+                    that.data1 = res.data.data
+                  }
+                });
+              }else{
+                that.ivMessage.info('remove failed');
+              }
+            },
+            error: function(data) {
+              that.ivMessage.destroy()
+              that.ivMessage.info(JSON.stringify(data));
+            }
+          })
+        },
+        editConfirm: async function() {
+          var that = this
+
+          if(that.adding)return
+
+          var result = await this.srefs['formInline'].validate()
+          if(!result) return
+
+          var obj = deepCopy(that.formItem)
+          obj.id = that.formItem.id
+          obj.report_date = that.formatDate(that.formItem.report_date, 'c')
+          obj.apartment = encodeURIComponent(obj.apartment)
+          obj.problem = encodeURIComponent(obj.problem)
+          obj.desc = encodeURIComponent(obj.desc)
+          obj.reporter = encodeURIComponent(obj.reporter)
+          console.log(obj)
+          // return
+          this.ivMessage.loading({
+              content: 'adding...',
+              duration: 0
+          });
+          that.adding = true
+          jQuery.ajax({
+            type:'post',
+            url: '/daily/reort/table/edit',
+            data: JSON.stringify(obj),
+            dataType:'json',
+            contentType : "application/json",
+            cache:false,
+            async:false,
+            success: function(res) {
+              that.ivMessage.destroy()
+              that.srefs['formInline'].resetFields();
+              setTimeout(function(){
+                that.adding = false
+              }, 2000)
+              if(res && res.status == 1){
+                that.isEdit = false
+                that.showDrawer = false
+                that.ivMessage.success({
+                  content: 'modify successful',
+                  onClose: function(){
+                    // that.getData()
+                    // that.dataHandle(res.data.data)
+                    that.data1 = res.data.data
+                  }
+                });
+              }else{
+                that.ivMessage.info('logout failed');
+              }
+            },
+            error: function(data) {
+              that.ivMessage.destroy()
+              that.ivMessage.info(JSON.stringify(data));
+            }
+          })
+        },
+        ok: async function() {
+          var that = this
+
+          if(that.adding)return
+
+          var result = await this.srefs['formInline'].validate()
+          if(!result) return
+
+          var obj = deepCopy(that.formItem)
+          
+          obj.report_date = moment(that.formItem.report_date).format("YYYY-MM-DD")
+          obj.apartment = encodeURIComponent(obj.apartment)
+          obj.problem = encodeURIComponent(obj.problem)
+          obj.desc = encodeURIComponent(obj.desc)
+          obj.reporter = encodeURIComponent(obj.reporter)
+          console.log(obj)
+          this.ivMessage.loading({
+              content: 'adding...',
+              duration: 0
+          });
+          that.adding = true
+          jQuery.ajax({
+            type:'post',
+            url: '/daily/reort/table',
+            data: JSON.stringify(obj),
+            dataType:'json',
+            contentType : "application/json",
+            cache:false,
+            async:false,
+            success: function(res) {
+              that.ivMessage.destroy()
+              that.srefs['formInline'].resetFields();
+              setTimeout(function(){
+                that.adding = false
+              }, 2000)
+              if(res && res.status == 1){
+                that.ivMessage.success({
+                  content: 'add successful',
+                  onClose: function(){
+                    // that.getData()
+                    // that.dataHandle(res.data.data)
+                    that.data1 = res.data.data
+                  }
+                });
+              }else{
+                that.ivMessage.info('logout failed');
+              }
+            },
+            error: function(data) {
+              that.ivMessage.destroy()
+              that.ivMessage.info(JSON.stringify(data));
+            }
+          })
+        },
+        getData: function(){
+          var that = this
+          var obj = {}
+          this.ivMessage.loading({
+              content: 'logout ing...',
+              duration: 0
+          });
+          jQuery.ajax({
+            type:'get',
+            url: '/daily/reort/table',
+            // data: JSON.stringify(obj),
+            dataType:'json',
+            contentType : "application/json",
+            cache:false,
+            async:false,
+            success: function(res) {
+              that.ivMessage.destroy()
+              if(res && res.status == 1){
+                that.columns1 = res.data.columns
+                if(sessionStorage.getItem('user.name') == 'admin'){
+                  that.columns1.push({
+                    "title": "操作",
+                    "key": "action",
+                    "slot": 'action',
+                    align: 'center',
+                    width: 150
+                  })
+                }
+                that.data1 = res.data.data
+              }else{
+                that.ivMessage.info('logout failed');
+              }
+            },
+            error: function(data) {
+              that.ivMessage.destroy()
+              that.ivMessage.info(JSON.stringify(data));
+            }
+          })
+        },
+        handleSpan: function({ row, column, rowIndex, columnIndex }) {
+          var that = this
+          if(column.key == 'apartment'){
+            var findArr = _.where(that.data1, {apartment: row.apartment})
+            if(findArr && findArr.length > 1){
+              if(findArr[0].id == row.id){
+                return {
+                  rowspan: findArr.length,
+                  colspan: 1
+                }
+              }else{
+                return [0, 0]
+              }
+            }
+          }
+        },
+        createApartment: function(val) {
+          this.apartmentList.push({
+            value: val,
+            label: val
+          });
+        },
+        outExcel: function(){
+          // download_url
+          var that = this
+          var obj = {}
+          this.ivMessage.loading({
+              content: 'excel ing...',
+              duration: 0
+          });
+          jQuery.ajax({
+            type:'get',
+            url: '/excel',
+            // data: JSON.stringify(obj),
+            dataType:'json',
+            contentType : "application/json",
+            cache:false,
+            async:false,
+            success: function(res) {
+              that.ivMessage.destroy()
+              if(res && res.status == 1){
+                location.href = res.download_url
+                // that.ivMessage.success({
+                //   content: 'logout successful',
+                //   onClose: function(){
+                //     // location.href = './login'
+                //   }
+                // });
+              }else{
+                that.ivMessage.info('excel failed');
+              }
+            },
+            error: function(data) {
+              that.ivMessage.destroy()
+              that.ivMessage.info(JSON.stringify(data));
+            }
+          })
+        },
+        logout: function(){
+          var that = this
+          if(that.logouting)return
+          var obj = {}
+          this.ivMessage.loading({
+              content: 'logout ing...',
+              duration: 0
+          });
+          that.logouting = true
+          jQuery.ajax({
+            type:'post',
+            url: '/logout',
+            data: JSON.stringify(obj),
+            dataType:'json',
+            contentType : "application/json",
+            cache:false,
+            async:false,
+            success: function(data) {
+              that.ivMessage.destroy()
+              if(data && data.status == 1){
+                sessionStorage.removeItem('user.name')
+                that.ivMessage.success({
+                  content: 'logout successful',
+                  onClose: function(){
+                    that.logouting = false
+                    location.href = '/login'
+                  }
+                });
+              }else{
+                that.ivMessage.info('logout failed');
+              }
+            },
+            error: function(data) {
+              that.logouting = false
+              that.ivMessage.destroy()
+              that.ivMessage.info(JSON.stringify(data));
+            }
+          })
+        }
+      }
+    })
+  })
+
+</script>
+</body>
+</html>

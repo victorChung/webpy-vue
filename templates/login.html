@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="/static/js/jquery-2.2.4.min.js"></script>
+  <script src="/static/js/vue.dev.js"></script>
+  <link rel="stylesheet" href="/static/js/iview.css">
+  <script src="/static/js/iview.min.js"></script>
+  <!-- <script src="/static/js/iview.js"></script> -->
+  <style scoped>
+    .layout{
+      padding: 40px;
+    }
+    .demo-spin-icon-load{
+        animation: ani-demo-spin 1s linear infinite;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <template>
+    <div class="layout">
+      <Row>
+        <i-col span="8">
+          <i-input v-model="name" placeholder="input username" placeholder="large size" />
+        </i-col>
+      </Row>
+      <br>
+      <Row>
+        <i-col span="8">
+          <i-input v-model="pwd" type="password" placeholder="input password" placeholder="large size" />
+        </i-col>
+      </Row>
+      <br>
+      <Row>
+        <i-col span="8">
+          <i-button type="primary" @click="login" >
+            <span v-if="!loging">登录</span>
+            <span v-else>
+              <i><Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon></i>登录中...
+            </span>
+          </i-button>
+        </i-col>
+      </Row>
+      <!-- <i-input v-model="pwd" placeholder="Enter something..." style="width: 300px" /> -->
+    </div>
+  </template>
+</div>
+<script>
+  jQuery(function(){
+    var app = new Vue({
+      el: '#app',
+      data: {
+        loging: false,
+        value1: '',
+        value2: '',
+        value3: '',
+        name: '',
+        pwd: '',
+      },
+      created: function() {
+      },
+      methods: {
+        login: function(){
+          var that = this
+          if(that.loging)return
+          var obj = {name: this.name, pwd: this.pwd}
+          this.ivMessage.loading({
+              content: 'Loading...',
+              duration: 0
+          });
+          that.loging = true
+          jQuery.ajax({
+            type:'post',
+            url: '/login',
+            data: JSON.stringify(obj),
+            // data: obj,
+            dataType:'json',
+            contentType : "application/json",
+            cache:false,
+            async:false,
+            success: function(res) {
+              that.ivMessage.destroy()
+              if(res && res.status == 1){
+                sessionStorage.setItem('user.name', res.data.name)
+                that.ivMessage.success({
+                  content: 'login success',
+                  onClose: function(){
+                    // that.loging = false
+                    location.href = '/'
+                  }
+                });
+              }else{
+                that.ivMessage.info('login fail');
+              }
+            },
+            error: function(res) {
+              that.ivMessage.destroy()
+              that.ivMessage.info(JSON.stringify(datresa));
+            }
+          })
+        }
+      }
+    })
+  })
+
+</script>
+</body>
+</html>
