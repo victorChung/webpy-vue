@@ -2,7 +2,7 @@
 Thumbs.db
 Desktop.ini
 venv/
-session/
+sessions/
 __pycache__/
 node_modules/
 bak/
