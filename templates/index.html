@@ -69,7 +69,7 @@
             </i-col>
           </Row>
         </Header>
-        <Content class="layout-content" :style="{padding: '0 50px'}">
+        <Content class="layout-content" :style="{padding: '20px 50px'}">
           <Card :bordered="false">
             <p slot="title">外发加工</p>
 
@@ -84,7 +84,7 @@
             </Row>
             <i-table border stripe :columns="columns1" :data="data1" highlight-row>
               <template slot-scope="{ row }" slot="reg_date">
-                <span>{{formatDate(row.reg_date)}}</span>
+                <strong>{{formatDate(row.reg_date)}}</strong>
               </template>
               <template slot-scope="{ row }" slot="apply_date">
                 <span>{{formatDate(row.apply_date)}}</span>
@@ -193,7 +193,8 @@
                 </i-col>
                 <i-col span="24">
                   <form-item label="工艺要求" prop="tech_require">
-                    <date-picker type="date" v-model.trim="formItem.tech_require" placeholder="工艺要求"></date-picker>
+                    <i-input type="text" v-model.trim="formItem.tech_require" placeholder="工艺要求">
+                    </i-input>
                   </form-item>
                 </i-col>
               </i-form>
@@ -297,6 +298,7 @@
           that.isEdit = true
           console.log(that.data1)
           that.formItem = deepCopy(that.data1[index])
+          debugger
           that.showDrawer = true
         },
         remove (index) {

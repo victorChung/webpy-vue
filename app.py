@@ -25,7 +25,8 @@ urls = (
     '/table', 'TableHandle',
     '/table/del', 'TableDelHandle',
     '/table/edit', 'TableEditHandle',
-    '/excel', 'ExcelHandle'
+    '/excel', 'ExcelHandle',
+    '/daily/reort/excel', 'DailyExcelHandle'
 )
 app = web.application(urls, globals())
 
@@ -45,12 +46,22 @@ def session_hook():
 
 class ExcelHandle(object):
   def GET(self):
-    f = open('data.json', 'r', encoding='UTF-8')
-    dataObj = json.loads(f.read())
-    if f:
-      f.close()
+    with open('data.json', 'r', encoding='UTF-8') as f:
+      dataObj = json.loads(f.read())
     str_time = time.strftime("%Y%m%d%H%M%S", time.localtime()) 
     download_url = excel.writeExcel(dataObj['data'], 'test_' + str_time + '.xls')
+
+    web.header('content-type','text/json')
+    return json.dumps({'status': 1, 'download_url': download_url})
+
+
+class DailyExcelHandle(object):
+  def GET(self):
+    with open('dailyReport.json', 'r', encoding='UTF-8') as f:
+      dataObj = json.loads(f.read())
+    print('dailyReport======>')
+    str_time = time.strftime("%Y%m%d%H%M%S", time.localtime()) 
+    download_url = excel.writeDailyExcel(dataObj['data'], 'test_' + str_time + '.xls')
 
     web.header('content-type','text/json')
     return json.dumps({'status': 1, 'download_url': download_url})
@@ -90,10 +101,9 @@ class DailyHandle(object):
 class DailyReportHandle(object):
   def GET(self):
     try:
-      f = open('dailyReport.json', 'r', encoding='UTF-8')
-      dataObj = json.loads(f.read())
-      if f:
-        f.close()
+      with open('dailyReport.json', 'r', encoding='UTF-8') as f:
+        dataObj = json.loads(f.read())
+
       # print(dataObj)
       dataObj['data'].sort(key = lambda x:x['apartment'])
       
@@ -119,10 +129,9 @@ class DailyReportHandle(object):
 
       print('post data json_data: ', json_data)
 
-      f = open('dailyReport.json', 'r', encoding='UTF-8')
-      dataObj = json.loads(f.read())
-      if f:
-        f.close()
+      with open('dailyReport.json', 'r', encoding='UTF-8') as f:
+        dataObj = json.loads(f.read())
+        
       dataObj['data'].append(json_data)
 
       dataObj['data'].sort(key = lambda x:x['apartment'])
@@ -130,10 +139,8 @@ class DailyReportHandle(object):
       print('--------------------after json.dumps(dataObj, ensure_ascii=False)')
       print(json.dumps(dataObj, ensure_ascii=False))
       jsonStr = json.dumps(dataObj, ensure_ascii=False)
-      f = open('dailyReport.json', 'w', encoding='UTF-8')
-      f.write(jsonStr)
-      if f:
-        f.close()
+      with open('dailyReport.json', 'w', encoding='UTF-8') as f:
+        f.write(jsonStr)
         
       # dataObj.sort()
 
@@ -149,10 +156,9 @@ class DailyReportDelHandle(object):
         web.header('content-type','text/json')
         return json.dumps({'status': 0, 'err': {'msg': '无权限进行该操作'}})
 
-      f = open('dailyReport.json', 'r', encoding='UTF-8')
-      dataObj = json.loads(f.read())
-      if f:
-        f.close()
+      with open('dailyReport.json', 'r', encoding='UTF-8') as f:
+        dataObj = json.loads(f.read())
+        
 
       post_data = web.data()
       if post_data:
@@ -166,10 +172,8 @@ class DailyReportDelHandle(object):
           break
 
       jsonStr = json.dumps(dataObj, ensure_ascii=False)
-      f = open('dailyReport.json', 'w', encoding='UTF-8')
-      f.write(jsonStr)
-      if f:
-        f.close()
+      with open('dailyReport.json', 'w', encoding='UTF-8') as f:
+        f.write(jsonStr)
       
       web.header('content-type','text/json')
       return json.dumps({'status': 1, 'data': dataObj})
@@ -185,10 +189,8 @@ class DailyReportEditHandle(object):
         web.header('content-type','text/json')
         return json.dumps({'status': 0, 'err': {'msg': '无权限进行该操作'}})
 
-      f = open('dailyReport.json', 'r', encoding='UTF-8')
-      dataObj = json.loads(f.read())
-      if f:
-        f.close()
+      with open('dailyReport.json', 'r', encoding='UTF-8') as f:
+        dataObj = json.loads(f.read())
 
       post_data = web.data()
       if post_data:
@@ -210,10 +212,8 @@ class DailyReportEditHandle(object):
           break
 
       jsonStr = json.dumps(dataObj, ensure_ascii=False)
-      f = open('dailyReport.json', 'w', encoding='UTF-8')
-      f.write(jsonStr)
-      if f:
-        f.close()
+      with open('dailyReport.json', 'w', encoding='UTF-8') as f:
+        f.write(jsonStr)
       
       web.header('content-type','text/json')
       return json.dumps({'status': 1, 'data': dataObj})
@@ -228,10 +228,8 @@ class TableEditHandle(object):
         web.header('content-type','text/json')
         return json.dumps({'status': 0, 'err': {'msg': '无权限进行该操作'}})
 
-      f = open('data.json', 'r', encoding='UTF-8')
-      dataObj = json.loads(f.read())
-      if f:
-        f.close()
+      with open('data.json', 'r', encoding='UTF-8') as f:
+        dataObj = json.loads(f.read())
 
       post_data = web.data()
       if post_data:
@@ -241,16 +239,18 @@ class TableEditHandle(object):
       data_arr = dataObj['data']
       for idx in range(len(data_arr)):
         if data_arr[idx]['id'] == json_data['id']:
+          json_data['module_name'] = unquote(json_data['module_name'])
+          json_data['info'] = unquote(json_data['info'])
+          json_data['tech_require'] = unquote(json_data['tech_require'])
+          # json_data['operator'] = session.user
           data_arr[idx] = json_data
           print("dataObj['data'][idx]")
           print(dataObj['data'][idx])
           break
 
       jsonStr = json.dumps(dataObj, ensure_ascii=False)
-      f = open('data.json', 'w', encoding='UTF-8')
-      f.write(jsonStr)
-      if f:
-        f.close()
+      with open('data.json', 'w', encoding='UTF-8') as f:
+        f.write(jsonStr)
       
       web.header('content-type','text/json')
       return json.dumps({'status': 1, 'data': dataObj})
@@ -265,10 +265,8 @@ class TableDelHandle(object):
         web.header('content-type','text/json')
         return json.dumps({'status': 0, 'err': {'msg': '无权限进行该操作'}})
 
-      f = open('data.json', 'r', encoding='UTF-8')
-      dataObj = json.loads(f.read())
-      if f:
-        f.close()
+      with open('data.json', 'r', encoding='UTF-8') as f:
+        dataObj = json.loads(f.read())
 
       post_data = web.data()
       if post_data:
@@ -282,10 +280,8 @@ class TableDelHandle(object):
           break
 
       jsonStr = json.dumps(dataObj, ensure_ascii=False)
-      f = open('data.json', 'w', encoding='UTF-8')
-      f.write(jsonStr)
-      if f:
-        f.close()
+      with open('data.json', 'w', encoding='UTF-8') as f:
+        f.write(jsonStr)
       
       web.header('content-type','text/json')
       return json.dumps({'status': 1, 'data': dataObj})
@@ -297,10 +293,8 @@ class TableDelHandle(object):
 class TableHandle(object):
   def GET(self):
     try:
-      f = open('data.json', 'r', encoding='UTF-8')
-      dataObj = json.loads(f.read())
-      if f:
-        f.close()
+      with open('data.json', 'r', encoding='UTF-8') as f:
+        dataObj = json.loads(f.read())
 
       # dataObj['data'].sort()
       # print(dataObj['data'])
@@ -324,10 +318,8 @@ class TableHandle(object):
 
       print('post data json_data: ', json_data)
 
-      f = open('data.json', 'r', encoding='UTF-8')
-      dataObj = json.loads(f.read())
-      if f:
-        f.close()
+      with open('data.json', 'r', encoding='UTF-8') as f:
+        dataObj = json.loads(f.read())
       # print('--------------------original dataObj')
       # print(dataObj)
       # dataObj['data'].append({"name": name, "age": age, "address": address, "date": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())})
@@ -341,10 +333,8 @@ class TableHandle(object):
       print('--------------------after json.dumps(dataObj, ensure_ascii=False)')
       print(json.dumps(dataObj, ensure_ascii=False))
       jsonStr = json.dumps(dataObj, ensure_ascii=False)
-      f = open('data.json', 'w', encoding='UTF-8')
-      f.write(jsonStr)
-      if f:
-        f.close()
+      with open('data.json', 'w', encoding='UTF-8') as f:
+        f.write(jsonStr)
       
       # print('--------------------type dataObj')
       # print(type(dataObj))
@@ -385,12 +375,11 @@ class LoginHandle(object):
         name = json_data['name']
         pwd = json_data['pwd']
         
-      f = open('login.json', 'r', encoding='UTF-8')
-      loginList = json.loads(f.read())
+      with open('login.json', 'r', encoding='UTF-8') as f:
+        loginList = json.loads(f.read())
+
       print(loginList)
       web.header('content-type','text/json')
-      if f:
-          f.close()
       login = False
       for item in loginList:
         print('item')
@@ -418,6 +407,9 @@ class LoginHandle(object):
     #       f.close()
 
 
-if __name__ == '__main__':
-  # app.add_processor(web.loodhook(session_hook))  #添加钩子，在每一个接口之前都执行
-  app.run()
+# if __name__ == '__main__':
+#   # app.add_processor(web.loodhook(session_hook))  #添加钩子，在每一个接口之前都执行
+#   app.run()
+
+
+application = app.wsgifunc()

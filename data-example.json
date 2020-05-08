@@ -2,7 +2,7 @@
   "columns": [
       {
           "title": "登记日期",
-          "key": "reg_date"
+          "slot": "reg_date"
       },
       {
           "title": "模号",
@@ -26,19 +26,19 @@
       },
       {
           "title": "申请日期",
-          "key": "apply_date"
+          "slot": "apply_date"
       },
       {
           "title": "预计到料日期",
-          "key": "stuff_date"
+          "slot": "stuff_date"
       },
       {
           "title": "要求完成日期",
-          "key": "expected_date"
+          "slot": "expected_date"
       },
       {
           "title": "数据下发日期",
-          "key": "distributed_date"
+          "slot": "distributed_date"
       },
       {
           "title": "工艺要求",

@@ -2,6 +2,7 @@
 Thumbs.db
 Desktop.ini
 venv/
+uwsgi/
 sessions/
 __pycache__/
 node_modules/
