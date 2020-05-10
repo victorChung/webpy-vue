@@ -89,6 +89,22 @@
       "tech_require": "刚好拿货就可以",
       "operator": "admin",
       "created_date": "2020-05-08 21:11:22"
+    },
+    {
+      "reg_date": "2020-5-8",
+      "module_no": "bfdger",
+      "username": "fbfgh",
+      "module_name": "354",
+      "module_num": "56567",
+      "info": "fgndgn",
+      "apply_date": "2020-5-8",
+      "stuff_date": "2020-5-8",
+      "expected_date": "2020-5-8",
+      "distributed_date": "",
+      "tech_require": "",
+      "operator": "admin",
+      "created_date": "2020-05-08 23:56:01",
+      "id": "cu9bp1xifh"
     }
   ]
 }

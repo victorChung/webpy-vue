@@ -134,8 +134,8 @@
                   </form-item>
                 </i-col>
                 <i-col span="24">
-                  <form-item label="问题点" prop="problem">
-                    <i-input type="text" v-model.trim="formItem.problem" placeholder="问题点">
+                  <form-item label="模号" prop="problem">
+                    <i-input type="text" v-model.trim="formItem.problem" placeholder="模号">
                     </i-input>
                   </form-item>
                 </i-col>
@@ -187,8 +187,12 @@
         data1: [],
         apartmentList: [
           {
-            value: '工艺计划',
-            label: '工艺计划'
+            value: '工艺',
+            label: '工艺'
+          },
+          {
+            value: '计划',
+            label: '计划'
           },
           {
             value: '加工',
@@ -219,7 +223,7 @@
             { required: true, message: '请填写部门', trigger: 'blur' }
           ],
           problem: [
-              { required: true, message: '请填写问题点', trigger: 'blur' }
+              { required: true, message: '请填写模号', trigger: 'blur' }
           ],
           desc: [
               { required: true, message: '请填写问题点描述', trigger: 'blur' }
