@@ -1,0 +1,6 @@
+1、先打开cmd
+
+2、把step1.bat文件拖到cmd执行
+  出现(venv)开头的命令行
+
+3、把step2.bat文件拖到cmd执行

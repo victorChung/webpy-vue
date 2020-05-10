@@ -153,7 +153,7 @@
                 </i-col>
                 <i-col span="24">
                   <form-item label="日期" prop="report_date">
-                    <date-picker type="date" v-model.trim="formItem.report_date" placeholder="日期"></date-picker>
+                    <date-picker type="datetime" v-model.trim="formItem.report_date" placeholder="日期"></date-picker>
                   </form-item>
                 </i-col>
               </i-form>
@@ -276,6 +276,9 @@
           that.isEdit = true
           console.log(that.data1)
           that.formItem = deepCopy(that.data1[index])
+          if(that.formItem.report_date && that.formItem.report_date.length <= 10){
+            that.formItem.report_date += ' 00:00:00'
+          }
           that.showDrawer = true
         },
         remove (index) {
@@ -324,7 +327,8 @@
 
           var obj = deepCopy(that.formItem)
           obj.id = that.formItem.id
-          obj.report_date = that.formatDate(that.formItem.report_date, 'c')
+
+          obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
           obj.apartment = encodeURIComponent(obj.apartment)
           obj.problem = encodeURIComponent(obj.problem)
           obj.desc = encodeURIComponent(obj.desc)
@@ -381,7 +385,7 @@
 
           var obj = deepCopy(that.formItem)
           
-          obj.report_date = moment(that.formItem.report_date).format("YYYY-MM-DD")
+          obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
           obj.apartment = encodeURIComponent(obj.apartment)
           obj.problem = encodeURIComponent(obj.problem)
           obj.desc = encodeURIComponent(obj.desc)

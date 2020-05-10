@@ -407,9 +407,9 @@ class LoginHandle(object):
     #       f.close()
 
 
-# if __name__ == '__main__':
-#   # app.add_processor(web.loodhook(session_hook))  #添加钩子，在每一个接口之前都执行
-#   app.run()
+if __name__ == '__main__':
+  # app.add_processor(web.loodhook(session_hook))  #添加钩子，在每一个接口之前都执行
+  app.run()
 
 
-application = app.wsgifunc()
+# application = app.wsgifunc()
