@@ -60,6 +60,23 @@ class DailyExcelHandle(object):
     with open('dailyReport.json', 'r', encoding='UTF-8') as f:
       dataObj = json.loads(f.read())
     print('dailyReport======>')
+    inputData = web.input()
+    print('DailyExcelHandle GET input data: ', inputData)
+    beginDate = inputData.get('beginDate')
+    endDate = inputData.get('endDate')
+    print('beginDate : ', beginDate)
+    print('endDate : ', endDate)
+    dataObj['data'].sort(key = lambda x:x['apartment'])
+
+    arr = dataObj['data']
+    if beginDate is not None:
+      arr = filterBeginDate(arr, beginDate)
+      # print('filterBeginDate : ', dataObj['data'])
+    if endDate is not None:
+      arr = filterEndDate(arr, endDate)
+      # print('filterEndDate : ', dataObj['data'])
+
+    dataObj['data'] = arr
     str_time = time.strftime("%Y%m%d%H%M%S", time.localtime()) 
     download_url = excel.writeDailyExcel(dataObj['data'], 'test_' + str_time + '.xls')
 
@@ -96,17 +113,56 @@ class DailyHandle(object):
     except Exception as err:
       return err
 
+def filterBeginDate(data, d):
+  arr = []
+  for x in range(len(data)):
+    item_date = data[x]['report_date'] if len(data[x]['report_date']) > 10 else data[x]['report_date'] + ' 00:00:00'
+    if item_date >= d:
+      arr.append(data[x])
+  print('arr : ')
+  print(arr)
+  return arr
+
+def filterEndDate(data, d):
+  arr = []
+  for x in range(len(data)):
+    item_date = data[x]['report_date'] if len(data[x]['report_date']) > 10 else data[x]['report_date'] + ' 00:00:00'
+    if item_date <= d:
+      arr.append(data[x])
+  print('arr : ')
+  print(arr)
+  return arr
+
+def getDailyReportFilterData(beginDate, endDate):
+  with open('dailyReport.json', 'r', encoding='UTF-8') as f:
+    dataObj = json.loads(f.read())
+  dataObj['data'].sort(key = lambda x:x['apartment'])
+  arr = dataObj['data']
+  if beginDate is not None:
+    arr = filterBeginDate(arr, beginDate)
+  if endDate is not None:
+    arr = filterEndDate(arr, endDate)
+  
+  dataObj['data'] = arr
+  return dataObj
 
 
 class DailyReportHandle(object):
   def GET(self):
     try:
-      with open('dailyReport.json', 'r', encoding='UTF-8') as f:
-        dataObj = json.loads(f.read())
 
-      # print(dataObj)
-      dataObj['data'].sort(key = lambda x:x['apartment'])
-      
+      inputData = web.input()
+      print('DailyReportHandle GET input data: ', inputData)
+      beginDate = inputData.get('beginDate')
+      endDate = inputData.get('endDate')
+      print('beginDate : ', beginDate)
+      print('endDate : ', endDate)
+
+      try:
+        dataObj = getDailyReportFilterData(beginDate, endDate)
+      except:
+        dataObj = getDailyReportFilterData(None, None)
+    
       web.header('content-type','text/json')
       return json.dumps({'status': 1, 'data': dataObj})
     except Exception as Argument:
@@ -121,9 +177,10 @@ class DailyReportHandle(object):
         json_data['problem'] = unquote(json_data['problem'])
         json_data['desc'] = unquote(json_data['desc'])
         json_data['reporter'] = unquote(json_data['reporter'])
-        json_data['report_date'] = unquote(json_data['report_date'])
+        nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        json_data['report_date'] = nowtime
         json_data['operator'] = session.user
-        json_data['created_date'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        json_data['created_date'] = nowtime
         rand_arr = utils.getRandomId(10)
         json_data['id'] = ''.join(rand_arr)
 
@@ -143,6 +200,10 @@ class DailyReportHandle(object):
         f.write(jsonStr)
         
       # dataObj.sort()
+      try:
+        dataObj = getDailyReportFilterData(json_data['beginDate'], json_data['endDate'])
+      except:
+        dataObj = getDailyReportFilterData(None, None)
 
       web.header('content-type','text/json')
       return json.dumps({'status': 1, 'data': dataObj})
@@ -165,15 +226,29 @@ class DailyReportDelHandle(object):
         print('post data: ', post_data)
         json_data = json.loads(post_data)
 
+      ids = json_data['id']
+
       data_arr = dataObj['data']
-      for idx in range(len(data_arr)):
-        if data_arr[idx]['id'] == json_data['id']:
-          data_arr.remove(data_arr[idx])
+      loop_times = range(len(data_arr))
+      for idx in loop_times:
+        print('idx : ', idx , ', len(data_arr): ', len(data_arr))
+        if idx >= len(data_arr):
           break
+        if data_arr[idx]['id'] in ids:
+          data_arr.remove(data_arr[idx])
+
+        # if data_arr[idx]['id'] == json_data['id']:
+        #   data_arr.remove(data_arr[idx])
+        #   break
 
       jsonStr = json.dumps(dataObj, ensure_ascii=False)
       with open('dailyReport.json', 'w', encoding='UTF-8') as f:
         f.write(jsonStr)
+
+      try:
+        dataObj = getDailyReportFilterData(json_data['beginDate'], json_data['endDate'])
+      except:
+        dataObj = getDailyReportFilterData(None, None)
       
       web.header('content-type','text/json')
       return json.dumps({'status': 1, 'data': dataObj})
@@ -205,7 +280,9 @@ class DailyReportEditHandle(object):
           data_arr[idx]['problem'] = unquote(json_data['problem'])
           data_arr[idx]['desc'] = unquote(json_data['desc'])
           data_arr[idx]['reporter'] = unquote(json_data['reporter'])
-          data_arr[idx]['report_date'] = unquote(json_data['report_date'])
+          nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+          data_arr[idx]['report_date'] = nowtime
+          data_arr['update_date'] = nowtime
           # data_arr[idx] = json_data
           print("dataObj['data'][idx]")
           print(dataObj['data'][idx])
@@ -214,6 +291,11 @@ class DailyReportEditHandle(object):
       jsonStr = json.dumps(dataObj, ensure_ascii=False)
       with open('dailyReport.json', 'w', encoding='UTF-8') as f:
         f.write(jsonStr)
+      
+      try:
+        dataObj = getDailyReportFilterData(json_data['beginDate'], json_data['endDate'])
+      except:
+        dataObj = getDailyReportFilterData(None, None)
       
       web.header('content-type','text/json')
       return json.dumps({'status': 1, 'data': dataObj})

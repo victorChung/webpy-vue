@@ -79,10 +79,22 @@
                   <i><Icon type="md-add" /></i>
                   添加数据
                 </i-button>
+                <i-button @click="delChecks(true)" type="error" style="margin-right: 16px;">删除</i-button>
                 <i-button @click="outExcel"><i><Icon type="md-code-download" size=18 /></i>导出excel</i-button>
               </i-col>
+              <i-col :sm="{span: 12}" order="2">
+                <date-picker type="daterange" v-model.trim="searchOpt.daterange" placeholder="选择日期" style="margin-right: 16px;"></date-picker>
+                <i-button @click="getData" type="primary"><i><Icon type="md-search" size=18 /></i>确定</i-button>
+              </i-col>
             </Row>
-            <i-table border stripe :columns="columns1" :data="data1" highlight-row :span-method="handleSpan">
+            <i-table border stripe :columns="columns1" :data="data1" 
+              @on-select="selectItem"  
+              @on-select-all="selectItem"
+              @on-select-all-cancel="selectAllCancel"
+              highlight-row :span-method="handleSpan">
+              <template slot-scope="{ row, index }" slot="seq">
+                <span>{{index + 1}}</span>
+              </template>
               <template slot-scope="{ row }" slot="report_date">
                 <span>{{formatDate(row.report_date)}}</span>
               </template>
@@ -151,11 +163,11 @@
                     </i-input>
                   </form-item>
                 </i-col>
-                <i-col span="24">
+                <!-- <i-col span="24">
                   <form-item label="日期" prop="report_date">
                     <date-picker type="datetime" v-model.trim="formItem.report_date" placeholder="日期"></date-picker>
                   </form-item>
-                </i-col>
+                </i-col> -->
               </i-form>
             </Row>
           </Drawer>    
@@ -211,12 +223,16 @@
             label: '益模'
           }
         ],
+        searchOpt: {
+          daterange: ['', '']
+        },
+        selection: [],
         formItem: {
           apartment: '',
           problem: '',
           desc: '',
           reporter: '',
-          report_date: new Date(),
+          // report_date: new Date(),
         },
         ruleValidate: {
           apartment: [
@@ -231,9 +247,9 @@
           reporter: [
               { required: true, message: '请填写对应人员', trigger: 'blur' }
           ],
-          report_date: [
-              { required: true, type: 'date', message: '请填写日期', trigger: 'blur' }
-          ],
+          // report_date: [
+          //     { required: false, type: 'date', message: '请填写日期', trigger: 'blur' }
+          // ],
         }
     
       },
@@ -276,11 +292,37 @@
           that.isEdit = true
           console.log(that.data1)
           that.formItem = deepCopy(that.data1[index])
-          if(that.formItem.report_date && that.formItem.report_date.length <= 10){
-            that.formItem.report_date += ' 00:00:00'
-          }
+          // if(that.formItem.report_date && that.formItem.report_date.length <= 10){
+          //   that.formItem.report_date += ' 00:00:00'
+          // }
           that.showDrawer = true
         },
+        selectItem (selection, row) {
+          var that = this
+          that.selection = selection
+        },
+        selectAll (selection) {
+          var that = this
+          that.selection = selection
+        },
+        selectAllCancel (selection) {
+          var that = this
+          that.selection = selection
+        },
+        delChecks () {
+          var that = this
+          if(that.selection.length == 0)return
+          this.ivModal.confirm({
+            title: '删除记录',
+            content: '确认删除所选项？',
+            onOk: () => {
+              that.remove(-1)
+            },
+            onCancel: () => {
+            }
+          });
+        },
+        // index = -1 为复选框删除按钮
         remove (index) {
           var that = this
           // this.data1.splice(index, 1);
@@ -288,11 +330,30 @@
               content: 'remove ing...',
               duration: 0
           });
+          var obj = {}
+          if(index != -1){
+            obj.id = [that.data1[index].id]
+          }else{
+            // 遍历勾选项
+            obj.id = []
+            for(var i in that.selection){
+              obj.id.push(that.selection[i].id)
+            }
+
+          }
+          console.log(obj.id)
+          if(that.searchOpt.daterange[0] != ''){
+            console.log(that.searchOpt.daterange.length)
+            // 2020-05-10 18:08:05
+            obj.beginDate = moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss')
+            that.searchOpt.daterange[1].setHours(23,59,59, 999)
+            obj.endDate = moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss')
+          }
 
           jQuery.ajax({
             type:'post',
             url: '/daily/reort/table/del',
-            data: JSON.stringify({id: that.data1[index].id}),
+            data: JSON.stringify(obj),
             dataType:'json',
             contentType : "application/json",
             cache:false,
@@ -328,12 +389,19 @@
           var obj = deepCopy(that.formItem)
           obj.id = that.formItem.id
 
-          obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
+          // obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
           obj.apartment = encodeURIComponent(obj.apartment)
           obj.problem = encodeURIComponent(obj.problem)
           obj.desc = encodeURIComponent(obj.desc)
           obj.reporter = encodeURIComponent(obj.reporter)
           console.log(obj)
+          if(that.searchOpt.daterange[0] != ''){
+            console.log(that.searchOpt.daterange.length)
+            // 2020-05-10 18:08:05
+            obj.beginDate = moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss')
+            that.searchOpt.daterange[1].setHours(23,59,59, 999)
+            obj.endDate = moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss')
+          }
           // return
           this.ivMessage.loading({
               content: 'adding...',
@@ -385,12 +453,19 @@
 
           var obj = deepCopy(that.formItem)
           
-          obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
+          // obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
           obj.apartment = encodeURIComponent(obj.apartment)
           obj.problem = encodeURIComponent(obj.problem)
           obj.desc = encodeURIComponent(obj.desc)
           obj.reporter = encodeURIComponent(obj.reporter)
           console.log(obj)
+          if(that.searchOpt.daterange[0] != ''){
+            console.log(that.searchOpt.daterange.length)
+            // 2020-05-10 18:08:05
+            obj.beginDate = moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss')
+            that.searchOpt.daterange[1].setHours(23,59,59, 999)
+            obj.endDate = moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss')
+          }
           this.ivMessage.loading({
               content: 'adding...',
               duration: 0
@@ -433,13 +508,21 @@
           var that = this
           var obj = {}
           this.ivMessage.loading({
-              content: 'logout ing...',
+              content: 'load ing...',
               duration: 0
           });
+          var dataObj = []
+          if(that.searchOpt.daterange[0] != ''){
+            console.log(that.searchOpt.daterange.length)
+            // 2020-05-10 18:08:05
+            dataObj.push('beginDate='+moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss'))
+            that.searchOpt.daterange[1].setHours(23,59,59, 999)
+            dataObj.push('endDate='+moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss'))
+          }
           jQuery.ajax({
             type:'get',
             url: '/daily/reort/table',
-            // data: JSON.stringify(obj),
+            data: dataObj.length > 0 ? dataObj.join('&') : '',
             dataType:'json',
             contentType : "application/json",
             cache:false,
@@ -449,6 +532,18 @@
               if(res && res.status == 1){
                 that.columns1 = res.data.columns
                 if(sessionStorage.getItem('user.name') == 'admin'){
+                  that.columns1.unshift({
+                    "title": "序号",
+                    "key": "seq",
+                    "slot": 'seq',
+                    align: 'center',
+                    width: 70
+                  })
+                  that.columns1.unshift({
+                    align: 'center',
+                    type: 'selection',
+                    width: 60
+                  })
                   that.columns1.push({
                     "title": "操作",
                     "key": "action",
@@ -498,10 +593,18 @@
               content: 'excel ing...',
               duration: 0
           });
+          var dataObj = []
+          if(that.searchOpt.daterange[0] != ''){
+            console.log(that.searchOpt.daterange.length)
+            // 2020-05-10 18:08:05
+            dataObj.push('beginDate='+moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss'))
+            that.searchOpt.daterange[1].setHours(23,59,59, 999)
+            dataObj.push('endDate='+moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss'))
+          }
           jQuery.ajax({
             type:'get',
             url: '/daily/reort/excel',
-            // data: JSON.stringify(obj),
+            data: dataObj.length > 0 ? dataObj.join('&') : '',
             dataType:'json',
             contentType : "application/json",
             cache:false,
