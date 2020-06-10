@@ -282,7 +282,7 @@ class DailyReportEditHandle(object):
           data_arr[idx]['reporter'] = unquote(json_data['reporter'])
           nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
           data_arr[idx]['report_date'] = nowtime
-          data_arr['update_date'] = nowtime
+          data_arr[idx]['update_date'] = nowtime
           # data_arr[idx] = json_data
           print("dataObj['data'][idx]")
           print(dataObj['data'][idx])
