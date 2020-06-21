@@ -15,7 +15,8 @@ web.config.session_parameters['timeout'] = 60*10
 
 urls = (
     "/safe", "Safe", 
-    '/', 'Handle', 
+    # '/', 'Handle', 
+    '/', 'DailyHandle', 
     '/daily/report', 'DailyHandle', 
     '/daily/reort/table', 'DailyReportHandle', 
     '/daily/reort/table/edit', 'DailyReportEditHandle', 
@@ -175,6 +176,8 @@ class DailyReportHandle(object):
         json_data = json.loads(post_data)
         json_data['apartment'] = unquote(json_data['apartment'])
         json_data['problem'] = unquote(json_data['problem'])
+        json_data['undertake'] = unquote(json_data['undertake'])
+        json_data['exception'] = unquote(json_data['exception'])
         json_data['desc'] = unquote(json_data['desc'])
         json_data['reporter'] = unquote(json_data['reporter'])
         nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -278,6 +281,8 @@ class DailyReportEditHandle(object):
         if data_arr[idx]['id'] == json_data['id']:
           data_arr[idx]['apartment'] = unquote(json_data['apartment'])
           data_arr[idx]['problem'] = unquote(json_data['problem'])
+          data_arr[idx]['undertake'] = unquote(json_data['undertake'])
+          data_arr[idx]['exception'] = unquote(json_data['exception'])
           data_arr[idx]['desc'] = unquote(json_data['desc'])
           data_arr[idx]['reporter'] = unquote(json_data['reporter'])
           nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())

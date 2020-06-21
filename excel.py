@@ -79,9 +79,12 @@ def writeDailyExcel(json_data, file_name):
   # 3个参数分别为行号，列号，和内容
   # 需要注意的是行号和列号都是从0开始的
   ws.write(0, 0, '部门')
-  ws.write(0, 1, '问题点')
-  ws.write(0, 2, '问题点描述')
-  ws.write(0, 3, '对应人员')
+  ws.write(0, 1, '模号')
+  ws.write(0, 2, '担当')
+  ws.write(0, 3, '异常类别')
+  ws.write(0, 4, '问题点描述')
+  ws.write(0, 5, '对应人员')
+  ws.write(0, 6, '日期')
   
   if type(json_data) is list:
     for index in range(len(json_data)):
@@ -89,17 +92,26 @@ def writeDailyExcel(json_data, file_name):
       if index == 0:
         ws.write_merge(index+1, index+c, 0, 0, json_data[index]['apartment'])
         ws.write(index+1, 1, json_data[index]['problem'])
-        ws.write(index+1, 2, json_data[index]['desc'])
-        ws.write(index+1, 3, json_data[index]['reporter'])
+        ws.write(index+1, 2, json_data[index]['undertake'])
+        ws.write(index+1, 3, json_data[index]['exception'])
+        ws.write(index+1, 4, json_data[index]['desc'])
+        ws.write(index+1, 5, json_data[index]['reporter'])
+        ws.write(index+1, 6, json_data[index]['report_date'])
       elif json_data[index - 1]['apartment'] != json_data[index]['apartment']:
         ws.write_merge(index+1, index+c, 0, 0, json_data[index]['apartment'])
         ws.write(index+1, 1, json_data[index]['problem'])
-        ws.write(index+1, 2, json_data[index]['desc'])
-        ws.write(index+1, 3, json_data[index]['reporter'])
+        ws.write(index+1, 2, json_data[index]['undertake'])
+        ws.write(index+1, 3, json_data[index]['exception'])
+        ws.write(index+1, 4, json_data[index]['desc'])
+        ws.write(index+1, 5, json_data[index]['reporter'])
+        ws.write(index+1, 6, json_data[index]['report_date'])
       elif json_data[index - 1]['apartment'] == json_data[index]['apartment']:
         ws.write(index+1, 1, json_data[index]['problem'])
-        ws.write(index+1, 2, json_data[index]['desc'])
-        ws.write(index+1, 3, json_data[index]['reporter'])
+        ws.write(index+1, 2, json_data[index]['undertake'])
+        ws.write(index+1, 3, json_data[index]['exception'])
+        ws.write(index+1, 4, json_data[index]['desc'])
+        ws.write(index+1, 5, json_data[index]['reporter'])
+        ws.write(index+1, 6, json_data[index]['report_date'])
 
   # ws.write_merge(1, 4, 0, 0, u'加工')
   # ws.write(1, 1, u'临时加急改模插机床')

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,30 +13,39 @@
   <script src="/static/js/moment.min.js"></script>
   <script src="/static/js/utils.js"></script>
   <style>
-    .ivu-table-wrapper{
+    * {
+      box-sizing: border-box;
+    }
+    .ivu-table-wrapper {
       overflow: initial;
     }
-    .ivu-poptip-body .ivu-icon-ios-help-circle{
+
+    .ivu-poptip-body .ivu-icon-ios-help-circle {
       display: none;
     }
-    .demo-spin-icon-load{
+
+    .demo-spin-icon-load {
       animation: ani-demo-spin 1s linear infinite;
     }
-    .layout-header{
-      padding: 20px 50px;
+
+    .layout-header {
+      padding: 5px 50px;
     }
-    .layout-content{
-      padding-bottom: 40px!important;
+
+    .layout-content {
+      /* padding-bottom: 40px !important; */
       position: fixed;
-      top: 73px;
+      top: 52px;
       bottom: 0;
       overflow: auto;
     }
-    .username{
+
+    .username {
       font-size: 22px;
 
     }
-    .layout-footer{
+
+    .layout-footer {
       height: 40px;
       padding: 10px 20px;
       position: fixed;
@@ -46,632 +56,820 @@
     }
   </style>
 </head>
-<body>
-<div id="app">
-  <Template>
-    <div class="layout">
-      <Layout>
-        <Header class="layout-header" :style="{padding: '20px 50px'}">
-          <Row type="flex" justify="space-between" align="middle">
-            <i-col>
-              <i-button @click="toPage('/')">
-                <span>外发加工<i><Icon type="ios-arrow-forward" /></i></span>
-              </i-button>
-            </i-col>
-            <i-col style="text-align: right; display: flex; align-items: center;">
-              <label class="username" for="" v-if="username"><i><Icon type="ios-person" size=24  /></i>{{username}}</label>
-              <i-button @click="logout">
-                <span v-if="!logouting">注销登录<i><Icon type="md-swap" /></i></span>
-                <span v-else>
-                  <i><Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon></i>注销中...
-                </span>
-              </i-button>
-            </i-col>
-          </Row>
-        </Header>
-        <Content class="layout-content" :style="{padding: '20px 50px'}">
-          <Card :bordered="false">
-            <p slot="title">每日问题汇总</p>
 
-            <Row type="flex" justify="space-between" align="middle" style="margin-bottom: 16px;">
-              <i-col :sm="{span: 12}" order="1">
-                <i-button @click="openModal" style="margin-right: 16px;">
-                  <i><Icon type="md-add" /></i>
-                  添加数据
-                </i-button>
-                <i-button @click="delChecks(true)" type="error" style="margin-right: 16px;">删除</i-button>
-                <i-button @click="outExcel"><i><Icon type="md-code-download" size=18 /></i>导出excel</i-button>
-              </i-col>
-              <i-col :sm="{span: 12}" order="2">
-                <date-picker type="daterange" v-model.trim="searchOpt.daterange" placeholder="选择日期" style="margin-right: 16px;"></date-picker>
-                <i-button @click="getData" type="primary"><i><Icon type="md-search" size=18 /></i>确定</i-button>
-              </i-col>
-            </Row>
-            <i-table border stripe :columns="columns1" :data="data1" 
-              @on-select="selectItem"  
-              @on-select-all="selectItem"
-              @on-select-all-cancel="selectAllCancel"
-              highlight-row :span-method="handleSpan">
-              <template slot-scope="{ row, index }" slot="seq">
-                <span>{{index + 1}}</span>
-              </template>
-              <template slot-scope="{ row }" slot="report_date">
-                <span>{{formatDate(row.report_date)}}</span>
-              </template>
-              <template slot-scope="{ row, index }" slot="action">
-                <i-button type="primary" size="small" style="margin-right: 5px" @click="edit(index)">edit</i-button>
-                <Poptip
-                  confirm
-                  placement="bottom"
-                  title="确认删除？"
-                  @on-ok="remove(index)">
-                  <i-button type="error" size="small"><Icon type="md-close" /></i-button>
-                </Poptip>
-              </template>
-            </i-table>
-          </Card>
-          <Drawer
-            :title="isEdit ? '修改数据' : '添加数据'"
-            v-model="showDrawer"
-            width="420"
-            :mask-closable="false"
-            :styles="styles"
-            :mask="false"
-          >
-            <Row type="flex"  justify="end" align="middle" style="margin-bottom: 30px;">
-              <i-col span="8" style="text-align: right;">
-                <i-button type="primary" @click="ok" v-if="!isEdit">
-                  <span v-if="!adding">确定添加</span>
-                  <span v-else>
-                    <i><Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon></i>添加中...
-                  </span>
-                </i-button>
-                <i-button type="primary" @click="editConfirm" v-else>
-                  <span v-if="!adding">确定修改</span>
-                  <span v-else>
-                    <i><Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon></i>修改中...
-                  </span>
-                </i-button>
-              </i-col>
-            </Row>
+<body>
+  <div id="app">
+    <Template>
+      <div class="layout">
+        <Layout>
+          <Header class="layout-header">
             <Row type="flex" justify="space-between" align="middle">
-              <i-form ref="formInline" :model="formItem" :rules="ruleValidate" :label-width="120">
-                <i-col span="24">
-                  <form-item label="部门" prop="apartment">
-                    <!-- <i-input type="text" v-model.trim="formItem.apartment" placeholder="部门">
+              <i-col>
+                <!-- <i-button @click="toPage('/')">
+                <span>外发加工<i><Icon type="ios-arrow-forward" /></i></span>
+              </i-button> -->
+              </i-col>
+              <i-col style="text-align: right; display: flex; align-items: center;">
+                <label class="username" for="" v-if="username"><i>
+                    <Icon type="ios-person" size=24 /></i>{{username}}</label>
+                <i-button @click="logout">
+                  <span v-if="!logouting">注销登录<i>
+                      <Icon type="md-swap" /></i></span>
+                  <span v-else>
+                    <i>
+                      <Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon>
+                    </i>注销中...
+                  </span>
+                </i-button>
+              </i-col>
+            </Row>
+          </Header>
+          <Content class="layout-content" :style="{padding: '5px 50px'}">
+            <Card :bordered="false">
+              <p slot="title">每日问题汇总</p>
+
+              <Row type="flex" justify="space-between" align="middle" style="margin-bottom: 16px;">
+                <i-col :sm="{span: 12}" order="1">
+                  <i-button @click="openModal" style="margin-right: 16px;">
+                    <i>
+                      <Icon type="md-add" /></i>
+                    添加数据
+                  </i-button>
+                  <i-button @click="delChecks(true)" type="error" style="margin-right: 16px;">删除</i-button>
+                  <i-button @click="outExcel"><i>
+                      <Icon type="md-code-download" size=18 /></i>导出excel</i-button>
+                </i-col>
+                <i-col :sm="{span: 12}" order="2">
+                  <date-picker type="daterange" v-model.trim="searchOpt.daterange" placeholder="选择日期"
+                    style="margin-right: 16px;"></date-picker>
+                  <i-button @click="getData" type="primary"><i>
+                      <Icon type="md-search" size=18 /></i>确定</i-button>
+                </i-col>
+              </Row>
+              <i-table border stripe :height="tableHeight"  :columns="columns1" :data="data1" @on-select="selectItem"
+                @on-select-all="selectItem" @on-filter-change="tableFilterChange" @on-select-all-cancel="selectAllCancel" highlight-row
+                :span-method="handleSpan">
+                <template slot-scope="{ row, index }" slot="seq">
+                  <span>{{index + 1}}</span>
+                </template>
+                <template slot-scope="{ row }" slot="report_date">
+                  <span>{{formatDate(row.report_date)}}</span>
+                </template>
+                <template slot-scope="{ row, index }" slot="action">
+                  <i-button type="primary" size="small" style="margin-right: 5px" @click="edit(index)">edit</i-button>
+                  <Poptip confirm placement="bottom" title="确认删除？" @on-ok="remove(index)">
+                    <i-button type="error" size="small">
+                      <Icon type="md-close" />
+                    </i-button>
+                  </Poptip>
+                </template>
+              </i-table>
+            </Card>
+            <Drawer :title="isEdit ? '修改数据' : '添加数据'" v-model="showDrawer" width="420" :mask-closable="false"
+              :styles="styles" :mask="false">
+              <Row type="flex" justify="end" align="middle" style="margin-bottom: 30px;">
+                <i-col span="8" style="text-align: right;">
+                  <i-button type="primary" @click="ok" v-if="!isEdit">
+                    <span v-if="!adding">确定添加</span>
+                    <span v-else>
+                      <i>
+                        <Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon>
+                      </i>添加中...
+                    </span>
+                  </i-button>
+                  <i-button type="primary" @click="editConfirm" v-else>
+                    <span v-if="!adding">确定修改</span>
+                    <span v-else>
+                      <i>
+                        <Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon>
+                      </i>修改中...
+                    </span>
+                  </i-button>
+                </i-col>
+              </Row>
+              <Row type="flex" justify="space-between" align="middle">
+                <i-form ref="formInline" :model="formItem" :rules="ruleValidate" :label-width="120">
+                  <i-col span="24">
+                    <form-item label="部门" prop="apartment">
+                      <!-- <i-input type="text" v-model.trim="formItem.apartment" placeholder="部门">
                     </i-input> -->
-                    <i-select v-model="formItem.apartment" filterable allow-create @on-create="createApartment">
-                        <i-option v-for="item in apartmentList" :value="item.value" :key="item.value">{{ item.label }}</i-option>
-                    </i-select>
-                  </form-item>
-                </i-col>
-                <i-col span="24">
-                  <form-item label="模号" prop="problem">
-                    <i-input type="text" v-model.trim="formItem.problem" placeholder="模号">
-                    </i-input>
-                  </form-item>
-                </i-col>
-                <i-col span="24">
-                  <form-item label="问题点描述" prop="desc">
-                    <i-input type="text" v-model.trim="formItem.desc" placeholder="问题点描述">
-                    </i-input>
-                  </form-item>
-                </i-col>
-                <i-col span="24">
-                  <form-item label="对应人员" prop="reporter">
-                    <i-input type="text" v-model.trim="formItem.reporter" placeholder="对应人员">
-                    </i-input>
-                  </form-item>
-                </i-col>
-                <!-- <i-col span="24">
+                      <i-select v-model="formItem.apartment" filterable allow-create @on-create="createApartment">
+                        <i-option v-for="item in apartmentList" :value="item.value" :key="item.value">{{ item.label }}
+                        </i-option>
+                      </i-select>
+                    </form-item>
+                  </i-col>
+                  <i-col span="24">
+                    <form-item label="模号" prop="problem">
+                      <i-input type="text" v-model.trim="formItem.problem" placeholder="模号">
+                      </i-input>
+                    </form-item>
+                  </i-col>
+                  <i-col span="24">
+                    <form-item label="担当" prop="undertake">
+                      <i-input type="text" v-model.trim="formItem.undertake" placeholder="担当">
+                      </i-input>
+                    </form-item>
+                  </i-col>
+                  <i-col span="24">
+                    <form-item label="异常类别" prop="exception">
+                      <i-select v-model="formItem.exception" filterable>
+                        <i-option v-for="item in exceptionList" :value="item.value" :key="item.value">{{ item.label }}
+                        </i-option>
+                      </i-select>
+                    </form-item>
+                  </i-col>
+                  <i-col span="24">
+                    <form-item label="问题点描述" prop="desc">
+                      <i-input type="text" v-model.trim="formItem.desc" placeholder="问题点描述">
+                      </i-input>
+                    </form-item>
+                  </i-col>
+                  <i-col span="24">
+                    <form-item label="对应人员" prop="reporter">
+                      <i-input type="text" v-model.trim="formItem.reporter" placeholder="对应人员">
+                      </i-input>
+                    </form-item>
+                  </i-col>
+                  <!-- <i-col span="24">
                   <form-item label="日期" prop="report_date">
                     <date-picker type="datetime" v-model.trim="formItem.report_date" placeholder="日期"></date-picker>
                   </form-item>
                 </i-col> -->
-              </i-form>
-            </Row>
-          </Drawer>    
-        </Content>
-        <!-- <Footer class="layout-footer">
+                </i-form>
+              </Row>
+            </Drawer>
+          </Content>
+          <!-- <Footer class="layout-footer">
         </Footer> -->
-      </Layout>
-    </div>
-  </Template>
-</div>
-<script>
-  jQuery(function(){
-    var app = new Vue({
-      el: '#app',
-      data: {
-        message: 'Hello Vue!',
-        username: sessionStorage.getItem('user.name'),
-        showDrawer: false, // drawer,
-        isEdit: false,
-        styles: {
-          height: 'calc(100% - 55px)',
-          overflow: 'auto',
-          paddingBottom: '53px',
-          position: 'static'
-        },
-        adding: false, // 添加状态
-        logouting: false, // 注销状态
-        columns1: [],
-        data1: [],
-        apartmentList: [
-          {
-            value: '工艺',
-            label: '工艺'
+        </Layout>
+      </div>
+    </Template>
+  </div>
+  <script>
+    jQuery(function () {
+      var app = new Vue({
+        el: '#app',
+        data: {
+          message: 'Hello Vue!',
+          tableHeight: window.innerHeight - 207,
+          username: sessionStorage.getItem('user.name'),
+          showDrawer: false, // drawer,
+          isEdit: false,
+          styles: {
+            height: 'calc(100% - 55px)',
+            overflow: 'auto',
+            paddingBottom: '53px',
+            position: 'static'
           },
-          {
-            value: '计划',
-            label: '计划'
-          },
-          {
-            value: '加工',
-            label: '加工'
-          },
-          {
-            value: '钳工',
-            label: '钳工'
-          },
-          {
-            value: '外协',
-            label: '外协'
-          },
-          {
-            value: '益模',
-            label: '益模'
-          }
-        ],
-        searchOpt: {
-          daterange: ['', '']
-        },
-        selection: [],
-        formItem: {
-          apartment: '',
-          problem: '',
-          desc: '',
-          reporter: '',
-          // report_date: new Date(),
-        },
-        ruleValidate: {
-          apartment: [
-            { required: true, message: '请填写部门', trigger: 'blur' }
-          ],
-          problem: [
-              { required: true, message: '请填写模号', trigger: 'blur' }
-          ],
-          desc: [
-              { required: true, message: '请填写问题点描述', trigger: 'blur' }
-          ],
-          reporter: [
-              { required: true, message: '请填写对应人员', trigger: 'blur' }
-          ],
-          // report_date: [
-          //     { required: false, type: 'date', message: '请填写日期', trigger: 'blur' }
-          // ],
-        }
-    
-      },
-      mounted: function(){
-        this.getData()
-      },
-      methods: {
-        toPage: function(path) {
-          location.href = path
-        },
-        openModal: function() {
-          var that = this
-          that.srefs['formInline'].resetFields();
-          that.showDrawer = true
-        },
-        formatDate: function(d, format = 'a'){
-          if(!d)return ''
-          if(!(d instanceof Date))d = new Date(d)
-          var val = ''
-          // debugger
-          switch(format){
-            case 'a':
-              val = (d.getMonth()+1) + '月' + d.getDate() + '日'
-              break
-            case 'b':
-              val = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日'
-              break
-            case 'c':
-              val = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate()
-              break
-          }
-          return val
-        },
-        reset: function() {
-          var that = this
-          that.srefs['formInline'].resetFields();
-        },
-        edit (index) {
-          var that = this
-          that.isEdit = true
-          console.log(that.data1)
-          that.formItem = deepCopy(that.data1[index])
-          // if(that.formItem.report_date && that.formItem.report_date.length <= 10){
-          //   that.formItem.report_date += ' 00:00:00'
-          // }
-          that.showDrawer = true
-        },
-        selectItem (selection, row) {
-          var that = this
-          that.selection = selection
-        },
-        selectAll (selection) {
-          var that = this
-          that.selection = selection
-        },
-        selectAllCancel (selection) {
-          var that = this
-          that.selection = selection
-        },
-        delChecks () {
-          var that = this
-          if(that.selection.length == 0)return
-          this.ivModal.confirm({
-            title: '删除记录',
-            content: '确认删除所选项？',
-            onOk: () => {
-              that.remove(-1)
+          adding: false, // 添加状态
+          logouting: false, // 注销状态
+          filterData: [],
+          columns1: [],
+          data1: [],
+          exceptionList: [
+            {
+              value: '设计异常',
+              label: '设计异常'
             },
-            onCancel: () => {
-            }
-          });
+            {
+              value: '工艺异常',
+              label: '工艺异常'
+            },
+            {
+              value: '计划异常',
+              label: '计划异常'
+            },
+            {
+              value: '加工异常',
+              label: '加工异常'
+            },
+            {
+              value: '烧焊异常',
+              label: '烧焊异常'
+            },
+            {
+              value: '送料异常',
+              label: '送料异常'
+            },
+            {
+              value: '其它',
+              label: '其它'
+            },
+          ],
+          apartmentList: [
+            {
+              value: '设计',
+              label: '设计'
+            },
+            {
+              value: '工艺',
+              label: '工艺'
+            },
+            {
+              value: '计划',
+              label: '计划'
+            },
+            {
+              value: '加工',
+              label: '加工'
+            },
+            {
+              value: '外协',
+              label: '外协'
+            },
+            {
+              value: '益模',
+              label: '益模'
+            },
+            {
+              value: '钳工',
+              label: '钳工'
+            },
+          ],
+          searchOpt: {
+            daterange: ['', '']
+          },
+          selection: [],
+          formItem: {
+            apartment: '',
+            problem: '',
+            undertake: '',
+            exception: '',
+            desc: '',
+            reporter: '',
+            // report_date: new Date(),
+          },
+          ruleValidate: {
+            apartment: [
+              { required: true, message: '请填写部门', trigger: 'blur' }
+            ],
+            problem: [
+              { required: true, message: '请填写模号', trigger: 'blur' }
+            ],
+            undertake: [
+              { required: true, message: '请填写担当', trigger: 'blur' }
+            ],
+            exception: [
+              { required: true, message: '请填写异常类别', trigger: 'blur' }
+            ],
+            desc: [
+              { required: true, message: '请填写问题点描述', trigger: 'blur' }
+            ],
+            reporter: [
+              { required: true, message: '请填写对应人员', trigger: 'blur' }
+            ],
+            // report_date: [
+            //     { required: false, type: 'date', message: '请填写日期', trigger: 'blur' }
+            // ],
+          }
+
         },
-        // index = -1 为复选框删除按钮
-        remove (index) {
-          var that = this
-          // this.data1.splice(index, 1);
-          this.ivMessage.loading({
+        mounted: function () {
+          this.getData()
+        },
+        methods: {
+          toPage: function (path) {
+            location.href = path
+          },
+          openModal: function () {
+            var that = this
+            that.srefs['formInline'].resetFields();
+            that.showDrawer = true
+          },
+          formatDate: function (d, format = 'a') {
+            if (!d) return ''
+            if (!(d instanceof Date)) d = new Date(d)
+            var val = ''
+            // debugger
+            switch (format) {
+              case 'a':
+                val = (d.getMonth() + 1) + '月' + d.getDate() + '日'
+                break
+              case 'b':
+                val = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日'
+                break
+              case 'c':
+                val = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
+                break
+            }
+            return val
+          },
+          reset: function () {
+            var that = this
+            that.srefs['formInline'].resetFields();
+          },
+          edit(index) {
+            var that = this
+            that.isEdit = true
+            console.log(that.data1)
+            that.formItem = deepCopy(that.data1[index])
+            // if(that.formItem.report_date && that.formItem.report_date.length <= 10){
+            //   that.formItem.report_date += ' 00:00:00'
+            // }
+            that.showDrawer = true
+          },
+          selectItem(selection, row) {
+            var that = this
+            that.selection = selection
+          },
+          selectAll(selection) {
+            var that = this
+            that.selection = selection
+          },
+          selectAllCancel(selection) {
+            var that = this
+            that.selection = selection
+          },
+          tableFilterChange(column, a, b){
+              // this.filterData = []
+              // console.log('tableFilterChange  this.filterData = []')
+            if(!column._isFiltered){
+              this.filterData = []
+            }
+          },
+          delChecks() {
+            var that = this
+            if (that.selection.length == 0) return
+            this.ivModal.confirm({
+              title: '删除记录',
+              content: '确认删除所选项？',
+              onOk: () => {
+                that.remove(-1)
+              },
+              onCancel: () => {
+              }
+            });
+          },
+          // index = -1 为复选框删除按钮
+          remove(index) {
+            var that = this
+            // this.data1.splice(index, 1);
+            this.ivMessage.loading({
               content: 'remove ing...',
               duration: 0
-          });
-          var obj = {}
-          if(index != -1){
-            obj.id = [that.data1[index].id]
-          }else{
-            // 遍历勾选项
-            obj.id = []
-            for(var i in that.selection){
-              obj.id.push(that.selection[i].id)
-            }
-
-          }
-          console.log(obj.id)
-          if(that.searchOpt.daterange[0] != ''){
-            console.log(that.searchOpt.daterange.length)
-            // 2020-05-10 18:08:05
-            obj.beginDate = moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss')
-            that.searchOpt.daterange[1].setHours(23,59,59, 999)
-            obj.endDate = moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss')
-          }
-
-          jQuery.ajax({
-            type:'post',
-            url: '/daily/reort/table/del',
-            data: JSON.stringify(obj),
-            dataType:'json',
-            contentType : "application/json",
-            cache:false,
-            async:false,
-            success: function(res) {
-              that.ivMessage.destroy()
-              if(res && res.status == 1){
-                that.ivMessage.success({
-                  content: 'remove successful',
-                  onClose: function(){
-                    // that.dataHandle(res.data.data)
-                    that.data1 = res.data.data
-                  }
-                });
-              }else{
-                that.ivMessage.info('remove failed');
+            });
+            var obj = {}
+            if (index != -1) {
+              obj.id = [that.data1[index].id]
+            } else {
+              // 遍历勾选项
+              obj.id = []
+              for (var i in that.selection) {
+                obj.id.push(that.selection[i].id)
               }
-            },
-            error: function(data) {
-              that.ivMessage.destroy()
-              that.ivMessage.info(JSON.stringify(data));
+
             }
-          })
-        },
-        editConfirm: async function() {
-          var that = this
+            console.log(obj.id)
+            if (that.searchOpt.daterange[0] != '') {
+              console.log(that.searchOpt.daterange.length)
+              // 2020-05-10 18:08:05
+              obj.beginDate = moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss')
+              that.searchOpt.daterange[1].setHours(23, 59, 59, 999)
+              obj.endDate = moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss')
+            }
 
-          if(that.adding)return
+            jQuery.ajax({
+              type: 'post',
+              url: '/daily/reort/table/del',
+              data: JSON.stringify(obj),
+              dataType: 'json',
+              contentType: "application/json",
+              cache: false,
+              async: false,
+              success: function (res) {
+                that.ivMessage.destroy()
+                if (res && res.status == 1) {
+                  that.ivMessage.success({
+                    content: 'remove successful',
+                    onClose: function () {
+                      // that.dataHandle(res.data.data)
+                      that.data1 = res.data.data
+                    }
+                  });
+                } else {
+                  that.ivMessage.info('remove failed');
+                }
+              },
+              error: function (data) {
+                that.ivMessage.destroy()
+                that.ivMessage.info(JSON.stringify(data));
+              }
+            })
+          },
+          editConfirm: async function () {
+            var that = this
 
-          var result = await this.srefs['formInline'].validate()
-          if(!result) return
+            if (that.adding) return
 
-          var obj = deepCopy(that.formItem)
-          obj.id = that.formItem.id
+            var result = await this.srefs['formInline'].validate()
+            if (!result) return
 
-          // obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
-          obj.apartment = encodeURIComponent(obj.apartment)
-          obj.problem = encodeURIComponent(obj.problem)
-          obj.desc = encodeURIComponent(obj.desc)
-          obj.reporter = encodeURIComponent(obj.reporter)
-          console.log(obj)
-          if(that.searchOpt.daterange[0] != ''){
-            console.log(that.searchOpt.daterange.length)
-            // 2020-05-10 18:08:05
-            obj.beginDate = moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss')
-            that.searchOpt.daterange[1].setHours(23,59,59, 999)
-            obj.endDate = moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss')
-          }
-          // return
-          this.ivMessage.loading({
+            var obj = deepCopy(that.formItem)
+            obj.id = that.formItem.id
+
+            // obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
+            obj.apartment = encodeURIComponent(obj.apartment)
+            obj.problem = encodeURIComponent(obj.problem)
+            obj.undertake = encodeURIComponent(obj.undertake)
+            obj.exception = encodeURIComponent(obj.exception)
+            obj.desc = encodeURIComponent(obj.desc)
+            obj.reporter = encodeURIComponent(obj.reporter)
+            console.log(obj)
+            if (that.searchOpt.daterange[0] != '') {
+              console.log(that.searchOpt.daterange.length)
+              // 2020-05-10 18:08:05
+              obj.beginDate = moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss')
+              that.searchOpt.daterange[1].setHours(23, 59, 59, 999)
+              obj.endDate = moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss')
+            }
+            // return
+            this.ivMessage.loading({
               content: 'adding...',
               duration: 0
-          });
-          that.adding = true
-          jQuery.ajax({
-            type:'post',
-            url: '/daily/reort/table/edit',
-            data: JSON.stringify(obj),
-            dataType:'json',
-            contentType : "application/json",
-            cache:false,
-            async:false,
-            success: function(res) {
-              that.ivMessage.destroy()
-              that.srefs['formInline'].resetFields();
-              setTimeout(function(){
-                that.adding = false
-              }, 2000)
-              if(res && res.status == 1){
-                that.isEdit = false
-                that.showDrawer = false
-                that.ivMessage.success({
-                  content: 'modify successful',
-                  onClose: function(){
-                    // that.getData()
-                    // that.dataHandle(res.data.data)
-                    that.data1 = res.data.data
-                  }
-                });
-              }else{
-                that.ivMessage.info('logout failed');
+            });
+            that.adding = true
+            jQuery.ajax({
+              type: 'post',
+              url: '/daily/reort/table/edit',
+              data: JSON.stringify(obj),
+              dataType: 'json',
+              contentType: "application/json",
+              cache: false,
+              async: false,
+              success: function (res) {
+                that.ivMessage.destroy()
+                that.srefs['formInline'].resetFields();
+                setTimeout(function () {
+                  that.adding = false
+                }, 2000)
+                if (res && res.status == 1) {
+                  that.isEdit = false
+                  that.showDrawer = false
+                  that.ivMessage.success({
+                    content: 'modify successful',
+                    onClose: function () {
+                      // that.getData()
+                      // that.dataHandle(res.data.data)
+                      that.data1 = res.data.data
+                    }
+                  });
+                } else {
+                  that.ivMessage.info('logout failed');
+                }
+              },
+              error: function (data) {
+                that.ivMessage.destroy()
+                that.ivMessage.info(JSON.stringify(data));
               }
-            },
-            error: function(data) {
-              that.ivMessage.destroy()
-              that.ivMessage.info(JSON.stringify(data));
+            })
+          },
+          ok: async function () {
+            var that = this
+
+            if (that.adding) return
+
+            var result = await this.srefs['formInline'].validate()
+            if (!result) return
+
+            var obj = deepCopy(that.formItem)
+
+            // obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
+            obj.apartment = encodeURIComponent(obj.apartment)
+            obj.problem = encodeURIComponent(obj.problem)
+            obj.undertake = encodeURIComponent(obj.undertake)
+            obj.exception = encodeURIComponent(obj.exception)
+            obj.desc = encodeURIComponent(obj.desc)
+            obj.reporter = encodeURIComponent(obj.reporter)
+            console.log(obj)
+            if (that.searchOpt.daterange[0] != '') {
+              console.log(that.searchOpt.daterange.length)
+              // 2020-05-10 18:08:05
+              obj.beginDate = moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss')
+              that.searchOpt.daterange[1].setHours(23, 59, 59, 999)
+              obj.endDate = moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss')
             }
-          })
-        },
-        ok: async function() {
-          var that = this
-
-          if(that.adding)return
-
-          var result = await this.srefs['formInline'].validate()
-          if(!result) return
-
-          var obj = deepCopy(that.formItem)
-          
-          // obj.report_date = moment(that.formItem.report_date).format('YYYY-MM-DD HH:mm:ss')
-          obj.apartment = encodeURIComponent(obj.apartment)
-          obj.problem = encodeURIComponent(obj.problem)
-          obj.desc = encodeURIComponent(obj.desc)
-          obj.reporter = encodeURIComponent(obj.reporter)
-          console.log(obj)
-          if(that.searchOpt.daterange[0] != ''){
-            console.log(that.searchOpt.daterange.length)
-            // 2020-05-10 18:08:05
-            obj.beginDate = moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss')
-            that.searchOpt.daterange[1].setHours(23,59,59, 999)
-            obj.endDate = moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss')
-          }
-          this.ivMessage.loading({
+            this.ivMessage.loading({
               content: 'adding...',
               duration: 0
-          });
-          that.adding = true
-          jQuery.ajax({
-            type:'post',
-            url: '/daily/reort/table',
-            data: JSON.stringify(obj),
-            dataType:'json',
-            contentType : "application/json",
-            cache:false,
-            async:false,
-            success: function(res) {
-              that.ivMessage.destroy()
-              that.srefs['formInline'].resetFields();
-              setTimeout(function(){
-                that.adding = false
-              }, 2000)
-              if(res && res.status == 1){
-                that.ivMessage.success({
-                  content: 'add successful',
-                  onClose: function(){
-                    // that.getData()
-                    // that.dataHandle(res.data.data)
-                    that.data1 = res.data.data
-                  }
-                });
-              }else{
-                that.ivMessage.info('logout failed');
+            });
+            that.adding = true
+            jQuery.ajax({
+              type: 'post',
+              url: '/daily/reort/table',
+              data: JSON.stringify(obj),
+              dataType: 'json',
+              contentType: "application/json",
+              cache: false,
+              async: false,
+              success: function (res) {
+                that.ivMessage.destroy()
+                that.srefs['formInline'].resetFields();
+                setTimeout(function () {
+                  that.adding = false
+                }, 2000)
+                if (res && res.status == 1) {
+                  that.ivMessage.success({
+                    content: 'add successful',
+                    onClose: function () {
+                      // that.getData()
+                      // that.dataHandle(res.data.data)
+                      that.data1 = res.data.data
+                    }
+                  });
+                } else {
+                  that.ivMessage.info('logout failed');
+                }
+              },
+              error: function (data) {
+                that.ivMessage.destroy()
+                that.ivMessage.info(JSON.stringify(data));
               }
-            },
-            error: function(data) {
-              that.ivMessage.destroy()
-              that.ivMessage.info(JSON.stringify(data));
-            }
-          })
-        },
-        getData: function(){
-          var that = this
-          var obj = {}
-          this.ivMessage.loading({
+            })
+          },
+          getData: function () {
+            var that = this
+            var obj = {}
+            this.ivMessage.loading({
               content: 'load ing...',
               duration: 0
-          });
-          var dataObj = []
-          if(that.searchOpt.daterange[0] != ''){
-            console.log(that.searchOpt.daterange.length)
-            // 2020-05-10 18:08:05
-            dataObj.push('beginDate='+moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss'))
-            that.searchOpt.daterange[1].setHours(23,59,59, 999)
-            dataObj.push('endDate='+moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss'))
-          }
-          jQuery.ajax({
-            type:'get',
-            url: '/daily/reort/table',
-            data: dataObj.length > 0 ? dataObj.join('&') : '',
-            dataType:'json',
-            contentType : "application/json",
-            cache:false,
-            async:false,
-            success: function(res) {
-              that.ivMessage.destroy()
-              if(res && res.status == 1){
-                that.columns1 = res.data.columns
-                if(sessionStorage.getItem('user.name') == 'admin'){
-                  that.columns1.unshift({
-                    "title": "序号",
-                    "key": "seq",
-                    "slot": 'seq',
-                    align: 'center',
-                    width: 70
-                  })
-                  that.columns1.unshift({
-                    align: 'center',
-                    type: 'selection',
-                    width: 60
-                  })
-                  that.columns1.push({
-                    "title": "操作",
-                    "key": "action",
-                    "slot": 'action',
-                    align: 'center',
-                    width: 150
-                  })
-                }
-                that.data1 = res.data.data
-              }else{
-                that.ivMessage.info('logout failed');
-              }
-            },
-            error: function(data) {
-              that.ivMessage.destroy()
-              that.ivMessage.info(JSON.stringify(data));
+            });
+            var dataObj = []
+            if (that.searchOpt.daterange[0] != '') {
+              console.log(that.searchOpt.daterange.length)
+              // 2020-05-10 18:08:05
+              dataObj.push('beginDate=' + moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss'))
+              that.searchOpt.daterange[1].setHours(23, 59, 59, 999)
+              dataObj.push('endDate=' + moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss'))
             }
-          })
-        },
-        handleSpan: function({ row, column, rowIndex, columnIndex }) {
-          var that = this
-          if(column.key == 'apartment'){
-            var findArr = _.where(that.data1, {apartment: row.apartment})
-            if(findArr && findArr.length > 1){
-              if(findArr[0].id == row.id){
-                return {
-                  rowspan: findArr.length,
-                  colspan: 1
+            jQuery.ajax({
+              type: 'get',
+              url: '/daily/reort/table',
+              data: dataObj.length > 0 ? dataObj.join('&') : '',
+              dataType: 'json',
+              contentType: "application/json",
+              cache: false,
+              async: false,
+              success: function (res) {
+                that.ivMessage.destroy()
+                if (res && res.status == 1) {
+                  let apartment = res.data.columns.find(item => item.key == 'apartment')
+                  if (apartment) {
+                    apartment.filters = that.apartmentList
+                    apartment.filterMultiple = false
+                    apartment.filterMethod = (value, row) => {
+                      if(row.apartment == value){
+                        if(that.filterData.length > 0 && that.filterData[0]['apartment'] != value){
+                          that.filterData = []
+                        }
+                        that.filterData.push(row)
+                        return true
+                      }
+                    }
+                  }
+                  let exception = res.data.columns.find(item => item.key == 'exception')
+                  if (exception) {
+                    exception.filters = that.exceptionList
+                    exception.filterMultiple = false
+                    exception.filterMethod = (value, row) => {
+                      if(row.exception == value){
+                        if(that.filterData.length > 0 && that.filterData[0]['exception'] != value){
+                          that.filterData = []
+                        }
+                        that.filterData.push(row)
+                        return true
+                      }
+                    }
+                  }
+                  let problem = res.data.columns.find(item => item.key == 'problem')
+                  if (problem) {
+                    let itemArr = res.data.data.filter(item => item['problem'] != '')
+                    let set1 = new Set(), setArr1 = [], arr1 =[]
+                    itemArr.map(item=>{
+                      set1.add(item['problem'])
+                    })
+                    if(set1.size){
+                      setArr1 = Array.from(set1)
+                      setArr1.map(sa=>{
+                        arr1.push({
+                          value: sa,
+                          label: sa
+                        })
+                      })
+                    }
+                    problem.filters = arr1
+                    problem.filterMultiple = false
+                    problem.filterMethod = (value, row) => {
+                      if(row.problem == value){
+                        if(that.filterData.length > 0 && that.filterData[0]['problem'] != value){
+                          that.filterData = []
+                        }
+                        that.filterData.push(row)
+                        return true
+                      }
+                    }
+                  }
+                  let undertake = res.data.columns.find(item => item.key == 'undertake')
+                  if (undertake) {
+                    let itemArr = res.data.data.filter(item => item['undertake'] && item['undertake'] != '')
+                    debugger
+                    let set1 = new Set(), setArr1 = [], arr1 =[]
+                    itemArr.map(item=>{
+                      set1.add(item['undertake'])
+                    })
+                    if(set1.size){
+                      setArr1 = Array.from(set1)
+                      setArr1.map(sa=>{
+                        arr1.push({
+                          value: sa,
+                          label: sa
+                        })
+                      })
+                    }
+                    undertake.filters = arr1
+                    undertake.filterMultiple = false
+                    undertake.filterMethod = (value, row) => {
+                      if(row.undertake == value){
+                        if(that.filterData.length > 0 && that.filterData[0]['undertake'] != value){
+                          that.filterData = []
+                        }
+                        that.filterData.push(row)
+                        return true
+                      }
+                    }
+                  }
+                  let reporter = res.data.columns.find(item => item.key == 'reporter')
+                  if (reporter) {
+                    let itemArr = res.data.data.filter(item => item['reporter'] != '')
+                    let set1 = new Set(), setArr1 = [], arr1 =[]
+                    itemArr.map(item=>{
+                      set1.add(item['reporter'])
+                    })
+                    if(set1.size){
+                      setArr1 = Array.from(set1)
+                      setArr1.map(sa=>{
+                        arr1.push({
+                          value: sa,
+                          label: sa
+                        })
+                      })
+                    }
+                    reporter.filters = arr1
+                    reporter.filterMultiple = false
+                    reporter.filterMethod = (value, row) => {
+                      if(row.reporter == value){
+                        if(that.filterData.length > 0 && that.filterData[0]['reporter'] != value){
+                          that.filterData = []
+                        }
+                        that.filterData.push(row)
+                        return true
+                      }
+                    }
+                  }
+                  that.columns1 = res.data.columns
+                  if (sessionStorage.getItem('user.name') == 'admin') {
+                    that.columns1.unshift({
+                      "title": "序号",
+                      "key": "seq",
+                      "slot": 'seq',
+                      align: 'center',
+                      width: 70
+                    })
+                    that.columns1.unshift({
+                      align: 'center',
+                      type: 'selection',
+                      width: 60
+                    })
+                    that.columns1.push({
+                      "title": "操作",
+                      "key": "action",
+                      "slot": 'action',
+                      align: 'center',
+                      width: 150
+                    })
+                  }
+                  that.data1 = res.data.data
+                } else {
+                  that.ivMessage.info('logout failed');
                 }
-              }else{
-                return [0, 0]
+              },
+              error: function (data) {
+                that.ivMessage.destroy()
+                that.ivMessage.info(JSON.stringify(data));
+              }
+            })
+          },
+          handleSpan: function ({ row, column, rowIndex, columnIndex }) {
+            var that = this
+            if (column.key == 'apartment') {
+              let tt = that.filterData.length > 0 ? that.filterData : that.data1
+              var findArr = _.where(tt, { apartment: row.apartment })
+              if (findArr && findArr.length > 1) {
+                if (findArr[0].id == row.id) {
+                  return {
+                    rowspan: findArr.length,
+                    colspan: 1
+                  }
+                } else {
+                  return [0, 0]
+                }
               }
             }
-          }
-        },
-        createApartment: function(val) {
-          this.apartmentList.push({
-            value: val,
-            label: val
-          });
-        },
-        outExcel: function(){
-          // download_url
-          var that = this
-          var obj = {}
-          this.ivMessage.loading({
+          },
+          createApartment: function (val) {
+            this.apartmentList.push({
+              value: val,
+              label: val
+            });
+          },
+          outExcel: function () {
+            // download_url
+            var that = this
+            var obj = {}
+            this.ivMessage.loading({
               content: 'excel ing...',
               duration: 0
-          });
-          var dataObj = []
-          if(that.searchOpt.daterange[0] != ''){
-            console.log(that.searchOpt.daterange.length)
-            // 2020-05-10 18:08:05
-            dataObj.push('beginDate='+moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss'))
-            that.searchOpt.daterange[1].setHours(23,59,59, 999)
-            dataObj.push('endDate='+moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss'))
-          }
-          jQuery.ajax({
-            type:'get',
-            url: '/daily/reort/excel',
-            data: dataObj.length > 0 ? dataObj.join('&') : '',
-            dataType:'json',
-            contentType : "application/json",
-            cache:false,
-            async:false,
-            success: function(res) {
-              that.ivMessage.destroy()
-              if(res && res.status == 1){
-                location.href = res.download_url
-                // that.ivMessage.success({
-                //   content: 'logout successful',
-                //   onClose: function(){
-                //     // location.href = './login'
-                //   }
-                // });
-              }else{
-                that.ivMessage.info('excel failed');
-              }
-            },
-            error: function(data) {
-              that.ivMessage.destroy()
-              that.ivMessage.info(JSON.stringify(data));
+            });
+            var dataObj = []
+            if (that.searchOpt.daterange[0] != '') {
+              console.log(that.searchOpt.daterange.length)
+              // 2020-05-10 18:08:05
+              dataObj.push('beginDate=' + moment(that.searchOpt.daterange[0]).format('YYYY-MM-DD HH:mm:ss'))
+              that.searchOpt.daterange[1].setHours(23, 59, 59, 999)
+              dataObj.push('endDate=' + moment(that.searchOpt.daterange[1]).format('YYYY-MM-DD HH:mm:ss'))
             }
-          })
-        },
-        logout: function(){
-          var that = this
-          if(that.logouting)return
-          var obj = {}
-          this.ivMessage.loading({
+            jQuery.ajax({
+              type: 'get',
+              url: '/daily/reort/excel',
+              data: dataObj.length > 0 ? dataObj.join('&') : '',
+              dataType: 'json',
+              contentType: "application/json",
+              cache: false,
+              async: false,
+              success: function (res) {
+                that.ivMessage.destroy()
+                if (res && res.status == 1) {
+                  location.href = res.download_url
+                  // that.ivMessage.success({
+                  //   content: 'logout successful',
+                  //   onClose: function(){
+                  //     // location.href = './login'
+                  //   }
+                  // });
+                } else {
+                  that.ivMessage.info('excel failed');
+                }
+              },
+              error: function (data) {
+                that.ivMessage.destroy()
+                that.ivMessage.info(JSON.stringify(data));
+              }
+            })
+          },
+          logout: function () {
+            var that = this
+            if (that.logouting) return
+            var obj = {}
+            this.ivMessage.loading({
               content: 'logout ing...',
               duration: 0
-          });
-          that.logouting = true
-          jQuery.ajax({
-            type:'post',
-            url: '/logout',
-            data: JSON.stringify(obj),
-            dataType:'json',
-            contentType : "application/json",
-            cache:false,
-            async:false,
-            success: function(data) {
-              that.ivMessage.destroy()
-              if(data && data.status == 1){
-                sessionStorage.removeItem('user.name')
-                that.ivMessage.success({
-                  content: 'logout successful',
-                  onClose: function(){
-                    that.logouting = false
-                    location.href = '/login'
-                  }
-                });
-              }else{
-                that.ivMessage.info('logout failed');
+            });
+            that.logouting = true
+            jQuery.ajax({
+              type: 'post',
+              url: '/logout',
+              data: JSON.stringify(obj),
+              dataType: 'json',
+              contentType: "application/json",
+              cache: false,
+              async: false,
+              success: function (data) {
+                that.ivMessage.destroy()
+                if (data && data.status == 1) {
+                  sessionStorage.removeItem('user.name')
+                  that.ivMessage.success({
+                    content: 'logout successful',
+                    onClose: function () {
+                      that.logouting = false
+                      location.href = '/login'
+                    }
+                  });
+                } else {
+                  that.ivMessage.info('logout failed');
+                }
+              },
+              error: function (data) {
+                that.logouting = false
+                that.ivMessage.destroy()
+                that.ivMessage.info(JSON.stringify(data));
               }
-            },
-            error: function(data) {
-              that.logouting = false
-              that.ivMessage.destroy()
-              that.ivMessage.info(JSON.stringify(data));
-            }
-          })
+            })
+          }
         }
-      }
+      })
     })
-  })
 
-</script>
+  </script>
 </body>
+
 </html>
